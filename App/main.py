@@ -5,6 +5,7 @@ from kivy.uix.label import Label
 
 class ISSRA(App):
     def build(self):
+        x = Label(text= 'Jericho is uwu')
         return Label(text='Hello world')
 
 
