@@ -1,0 +1,51 @@
+MDScreen:
+    name: "mscreen"
+    MDFloatLayout:
+        MDScreenManager:
+            MDScreen:
+                Image:
+                    id: cam
+                    allow_stretch: True
+                    keep_ratio: False
+                    pos_hint: {'center_x': 0.5, 'top': 1}
+                MDTopAppBar:
+                    elevation: 4
+                    pos_hint: {"top": 1}
+                    md_bg_color: "#6495ED"
+                MDWidget:
+                    canvas:
+                        Color:
+                            rgb: 0, 0, 0
+                        Rectangle:
+                            size: self.width, self.height*0.15
+                            pos: self.x, self.y
+                MDIconButton: #Camera Button
+                    id: cam_button
+                    icon: 'checkbox-blank-circle-outline'
+                    icon_size: "64sp"
+                    theme_icon_color: "Custom"
+                    icon_color: "white"
+                    pos_hint: {'center_x': 0.5, 'bottom': 0.9}
+                MDIconButton: #Navigation Drawer Button
+                    id: nav_drawer_button
+                    icon: "menu"
+                    icon_size: "32sp"
+                    theme_icon_color: "Custom"
+                    icon_color: "white"
+                    pos_hint: {"top": 1}
+                    on_press: nav_drawer.set_state("open")
+
+        MDNavigationDrawer: #Navigation Drawer
+            id: nav_drawer
+            radius: (0, 16, 16, 0)
+            MDNavigationDrawerMenu:
+                MDNavigationDrawerHeader:
+                    title: "SnapScore"                    
+                    title_color: "#4a4939"
+                    source: "assets/logo.png"
+                    spacing: "4dp"
+                    padding: "12dp", 0, 0, "56dp"
+                    
+                MDNavigationDrawerItem: #help button
+                    icon: "help-circle-outline"
+                    text: "Help"
