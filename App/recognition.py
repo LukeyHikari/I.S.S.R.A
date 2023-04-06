@@ -7,9 +7,9 @@ import os
 model = tf.keras.models.load_model('App/recog_model')
 
 image_number = 1
-while os.path.isfile(f"App/temp/digit{image_number}.png"):
+while os.path.isfile(f"App/temp/scoreline{image_number}.png"):
     try:
-        img = cv2.imread(f"App/temp/digit{image_number}.png") [:,:,0]
+        img = cv2.imread(f"App/temp/scoreline{image_number}.png") [:,:,0]
         img = np.invert(np.array([img]))
         prediction = model.predict(img)
         print(f"Digit: {np.argmax(prediction)}")
