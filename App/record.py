@@ -1,8 +1,6 @@
 from __future__ import print_function
 from pprint import pprint
-
 import os.path
-
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -35,18 +33,18 @@ class recording:
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists('App/GoogleSheets/token.json'):
-            self.creds = Credentials.from_authorized_user_file('App/GoogleSheets/token.json', self.SCOPES)
+        if os.path.exists('App/token.json'):
+            self.creds = Credentials.from_authorized_user_file('App/token.json', self.SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'App/GoogleSheets/credentials.json', self.SCOPES)
+                    'App/credentials.json', self.SCOPES)
                 self.creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('App/GoogleSheets/token.json', 'w') as token:
+            with open('App/token.json', 'w') as token:
                 token.write(self.creds.to_json())
 
         try:

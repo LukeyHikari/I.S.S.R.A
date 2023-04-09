@@ -6,9 +6,17 @@ from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
+from kivymd.uix.textfield import MDTextField
+from kivymd.uix.button import MDRectangleFlatButton
+import os
 import cv2 as cam
+import record
+import digit_rec
 
 Window.size = (360,640)
+sheets = record.recording()
+preprocess = digit_rec.recognition()
+ocr = digit_rec.scoresocr()
 
 class SnapScore(MDApp):
     global smanager
@@ -21,6 +29,11 @@ class SnapScore(MDApp):
         self.open_screen = Builder.load_file('openscreen.kv') 
         smanager.add_widget(self.open_screen) 
         smanager.add_widget(self.main_screen)
+        
+        self.acttype = ""
+        self.maxgrade = None
+        self.nostuds = None
+        self.actnumber = None
 
         #Live camera capture
         self.capture = cam.VideoCapture(0)
@@ -28,6 +41,46 @@ class SnapScore(MDApp):
 
         #Screen capture function binding   
         self.main_screen.ids.cam_button.bind(on_press=self.take_pic)
+
+        #Task Button Events and Widgets
+        self.highinputfield = MDTextField(
+            id = "highinputfield",
+            hint_text = 'Highest Score',
+            helper_text_mode = "on_focus",
+            max_text_length = 3,
+            mode = "fill",
+            pos_hint = {'center_x': 0.5, 'center_y': 0.5},
+            size_hint = (0.5,1)
+        )
+        self.setbuttonmax = MDRectangleFlatButton(
+            text = "Set",
+            text_color = "white",
+            md_bg_color = "#50018c",
+            pos_hint = {'center_x': 0.65, 'center_y': 0.42},
+            on_press = self.retrievemax
+        )  
+        self.nostudsfield = MDTextField(
+            id = "nostudsfield",
+            hint_text = 'Number of Students',
+            helper_text_mode = "on_focus",
+            max_text_length = 3,
+            mode = "fill",
+            pos_hint = {'center_x': 0.5, 'center_y': 0.5},
+            size_hint = (0.5,1)
+        )
+        self.setbuttonno = MDRectangleFlatButton(
+            text = "Set",
+            text_color = "white",
+            md_bg_color = "#50018c",
+            pos_hint = {'center_x': 0.65, 'center_y': 0.42},
+            on_press = self.get_nostuds
+        )
+
+        self.main_screen.ids.pt_button.bind(on_press=self.set_pt)
+        self.main_screen.ids.wt_button.bind(on_press=self.set_wt)
+        self.main_screen.ids.qt_button.bind(on_press=self.set_qt)
+        self.main_screen.ids.actno_button.bind(on_press=self.setano)
+        self.main_screen.ids.save_button.bind(on_press=self.savescores)
 
         return smanager
 
@@ -49,8 +102,86 @@ class SnapScore(MDApp):
         self.main_screen.ids.cam.texture = texture
 
     def take_pic(self, *args): #Capture function 
-        image_name = "App/temp/picture.png"
+        image_name = "App/temp/beingrecorded.jpg"
         cam.imwrite(image_name, self.image_frame)
+
+        segmented = preprocess.combinedbox(image_name)
+        indiv_score = ocr.identify_score(segmented)
+
+        scoreindex = int(indiv_score[1]) + int(indiv_score[0]) * 10
+        actualscore = int(indiv_score[5]) + int(indiv_score[4]) * 10 + int(indiv_score[3]) * 100
+
+        self.score_list[scoreindex] = actualscore
+
+        print(scoreindex)
+        print(actualscore)
+
+        try:
+            os.remove(image_name)
+        except: pass
+
+    def set_pt(self, *args):
+        self.acttype = "Performance"
+        self.main_screen.add_widget(self.highinputfield)
+        self.main_screen.add_widget(self.setbuttonmax)
+
+    def set_wt(self, *args):
+        self.acttype = "Written"
+        self.main_screen.add_widget(self.highinputfield)
+        self.main_screen.add_widget(self.setbuttonmax)
+
+    def set_qt(self, *args):
+        self.acttype = "Quarterly"
+        self.main_screen.add_widget(self.highinputfield)
+        self.main_screen.add_widget(self.setbuttonmax)
+
+    def retrievemax(self, *args):
+        self.main_screen.remove_widget(self.highinputfield)
+        self.main_screen.remove_widget(self.setbuttonmax)
+        self.maxgrade = self.highinputfield.text
+        print(self.maxgrade)
+        self.main_screen.add_widget(self.nostudsfield)
+        self.main_screen.add_widget(self.setbuttonno)
+        
+    def get_nostuds(self,*args):
+        self.main_screen.remove_widget(self.nostudsfield)
+        self.main_screen.remove_widget(self.setbuttonno)
+        self.nostuds = self.nostudsfield.text
+        self.score_list = []
+        for prelist in range(int(self.nostuds)):
+            self.score_list.append("0")
+        print(self.nostuds)
+        print(len(self.score_list))
+
+    def setano(self,*args):
+        self.actnofield = MDTextField(
+            id = "actnofield",
+            hint_text = 'Act. #',
+            helper_text_mode = "on_focus",
+            max_text_length = 3,
+            mode = "fill",
+            pos_hint = {'center_x': 0.5, 'center_y': 0.5},
+            size_hint = (0.5,1)
+        )
+        self.setbuttonactno = MDRectangleFlatButton(
+            text = "Set",
+            text_color = "white",
+            md_bg_color = "#50018c",
+            pos_hint = {'center_x': 0.65, 'center_y': 0.42},
+            on_press = self.get_actno
+        )
+        self.main_screen.add_widget(self.actnofield)
+        self.main_screen.add_widget(self.setbuttonactno)
+    
+    def get_actno(self,*args):
+        self.main_screen.remove_widget(self.actnofield)
+        self.main_screen.remove_widget(self.setbuttonactno)
+        self.actnumber = self.actnofield.text
+        print(self.actnumber)
+
+    def savescores(self,*args):
+        sheets.highestgrade(int(self.maxgrade), int(self.actnumber), self.acttype)
+        sheets.checkgrade(int(self.nostuds), int(self.actnumber), self.acttype, self.score_list)
 
 if __name__ == '__main__':
     SnapScore().run()

@@ -19,6 +19,31 @@ MDScreen:
                         Rectangle:
                             size: self.width, self.height*0.15
                             pos: self.x, self.y
+
+                MDRectangleFlatButton:
+                    id: pt_button
+                    text: "PT"
+                    text_color: "white"
+                    md_bg_color: "#50018c"
+                    pos_hint: {'center_x': 0.9, 'top': 0.98}
+                MDRectangleFlatButton:
+                    id: wt_button
+                    text: "WT"
+                    text_color: "white"
+                    md_bg_color: "#50018c"
+                    pos_hint: {'center_x': 0.70, 'top': 0.98}
+                MDRectangleFlatButton:
+                    id: qt_button
+                    text: "QT"
+                    text_color: "white"
+                    md_bg_color: "#50018c"
+                    pos_hint: {'center_x': 0.50, 'top': 0.98}
+                MDRectangleFlatButton:
+                    id: actno_button
+                    text: "Act. #"
+                    text_color: "white"
+                    md_bg_color: "#50018c"
+                    pos_hint: {'center_x': 0.25, 'top': 0.98}
                 MDIconButton: #Camera Button
                     id: cam_button
                     icon: 'checkbox-blank-circle-outline'
@@ -26,6 +51,13 @@ MDScreen:
                     theme_icon_color: "Custom"
                     icon_color: "white"
                     pos_hint: {'center_x': 0.5, 'bottom': 0.9}
+                MDIconButton: #Save Button
+                    id: save_button
+                    icon: 'content-save-outline'
+                    icon_size: "64sp"
+                    theme_icon_color: "Custom"
+                    icon_color: "white"
+                    pos_hint: {'center_x': 0.90, 'bottom': 0.9}                    
                 MDIconButton: #Navigation Drawer Button
                     id: nav_drawer_button
                     icon: "menu"
@@ -46,6 +78,10 @@ MDScreen:
                     spacing: "4dp"
                     padding: "12dp", 0, 0, "56dp"
                     
+                MDNavigationDrawerItem: #help button
+                    icon: "help-circle-outline"
+                    text: "Record Sheet"
+
                 MDNavigationDrawerItem: #help button
                     icon: "help-circle-outline"
                     text: "Help"
