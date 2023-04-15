@@ -58,13 +58,13 @@ class recognition:
         #Image Preprocessing
         #Skew Correction, Gray, and Resize
         self.skew = self.correct_skew(self.img)
-        self.gray = cv2.cvtColor(self.skew, cv2.COLOR_BGR2GRAY)
+        self.gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
         self.blur = cv2.blur(self.gray, (3,3))
         self.resize = cv2.resize(self.blur, (640,480))
 
         #Digits Finding
         self.invert = cv2.bitwise_not(self.resize)
-        self.edges = cv2.Canny(self.invert,225,275)
+        self.edges = cv2.Canny(self.invert,225,300)
         self.thresh = cv2.threshold(self.edges, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
         self.dilate = cv2.dilate(self.thresh, cv2.getStructuringElement(cv2.MORPH_RECT, (8,9)), iterations=1)
         self.erode = cv2.erode(self.dilate, cv2.getStructuringElement(cv2.MORPH_RECT, (1,13)), iterations=1)
@@ -77,9 +77,9 @@ class recognition:
         self.contours = self.contours[0] if len(self.contours) == 2 else self.contours[1]
         self.contours = sorted(self.contours, key=lambda x: cv2.boundingRect(x)[0])
 
-        # cv2.imshow("Image", self.dilate)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.imshow("Image", self.resize)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def indivbox(self, _imgpath):
         self.preprocess(_imgpath)
@@ -90,7 +90,7 @@ class recognition:
             roi = self.dilate[y-5:y+h+5, x-4:x+w+4]
             resizedroi = cv2.resize(roi, (28,28))
             invertedroi = cv2.bitwise_not(resizedroi)
-            cv2.imwrite(f'App/temp/scoreline{roiloop}.png', invertedroi)
+            cv2.imwrite(f'temp/scoreline{roiloop}.png', invertedroi)
             cv2.rectangle(self.resize, (x, y), (x + w, y + h), (255,255,255), 2)
 
     def combinedbox(self, _imgpath):
@@ -120,8 +120,8 @@ class recognition:
                 else:
                     pass 
         
-        self.erode = cv2.erode(self.dilate, cv2.getStructuringElement(cv2.MORPH_RECT, (10,1)), iterations=1)
-        roi = self.erode[min(self.recty)-10:max(self.recty) + max(self.recth) + 10,
+        #self.erode = cv2.erode(self.dilate, cv2.getStructuringElement(cv2.MORPH_RECT, (5,1)), iterations=1)
+        roi = self.dilate[min(self.recty)-10:max(self.recty) + max(self.recth) + 10,
                           self.rectx[0]-30:self.rectx[len(self.rectx)-1] + self.rectw[len(self.rectw)-1]+30]
         invertedroi = cv2.bitwise_not(roi)
 
@@ -129,7 +129,7 @@ class recognition:
                      (self.rectx[len(self.rectx)-1] + self.rectw[len(self.rectw)-1], max(self.recty) + max(self.recth)),
                      (255,255,255), 2)
         
-        finalpath = f'App/temp/combined.png'
+        finalpath = f'temp/combined.png'
 
         cv2.imwrite(finalpath, invertedroi)
         # cv2.imshow("Preprocess", invertedroi)
@@ -175,12 +175,30 @@ class scoresocr:
                 self.listed[i] = "0"
             if self.listed[i] == "z":
                 self.listed[i] = "3"
+            if self.listed[i] == "b" or self.listed[i] == "a":
+                self.listed[i] = 6
+            if self.listed[i] == "F" or self.listed[i] == "f" or self.listed[i] == "#" or self.listed[i] == "+" or self.listed[i] == "}":
+                self.listed[i] = 7
+            if self.listed[i] == "I" or self.listed[i] == "q":
+                self.listed[i] = 9
+            if self.listed[i] == "g":
+                self.listed[i] = 8
+            if self.listed[i] == "Z":
+                self.listed[i] = "2"
+            if self.listed[i] == "S" or self.listed[i] == "s":
+                self.listed[i] = 5
 
         #print(self.listed)
         return self.listed
 
-# if __name__ == '__main__':
-#     run = recognition()
-#     #run.preprocess()
-#     #run.combinedbox('App/temp/sample3.jpg')
-#     #run.displayimg()
+if __name__ == '__main__':
+    run = recognition()
+    ocring = scoresocr()
+    digicheck = 1
+    # for i in range(27):
+    #     print(ocring.identify_score(f'temp/{digicheck}.png'))
+    #     digicheck += 1
+    print(ocring.identify_score('temp/24.png'))
+    #run.preprocess('temp/beingrecorded.jpg')
+    #run.combinedbox('temp/sample3.jpg')
+    #run.displayimg()

@@ -33,18 +33,18 @@ class recording:
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists('App/token.json'):
-            self.creds = Credentials.from_authorized_user_file('App/token.json', self.SCOPES)
+        if os.path.exists('token.json'):
+            self.creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'App/credentials.json', self.SCOPES)
+                    'credentials.json', self.SCOPES)
                 self.creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('App/token.json', 'w') as token:
+            with open('token.json', 'w') as token:
                 token.write(self.creds.to_json())
 
         try:
@@ -76,12 +76,12 @@ class recording:
                 if len(cellval) > 0:
                     pprint(f'Student {i+1} has a Grade')
                 else:
-                    self.recordgrade(i, _acttype, _grade[i])
+                    self.recordgrade(i, self.actno, _acttype, _grade[i])
         except HttpError as error:
             print(f"An Error Occured: {error}")
             return
         
-    def recordgrade(self, _currstud, _acttype, _grade):
+    def recordgrade(self, _currstud, _actno, _acttype, _grade):
         try:
             self.spreadsheetid = '1e41321N9V0wQF7kifoDMpCfelVUhNkftdoVLsgfz38E'
             self.valinpopt = 'USER_ENTERED'
@@ -90,7 +90,7 @@ class recording:
             self.valranbody ={'values': self.values}
 
             #Identifies cell to write to
-            self.actno = 1
+            self.actno = _actno
             self.currstud = _currstud
             self.acttype = f'{_acttype}'
             if self.acttype == 'Performance':

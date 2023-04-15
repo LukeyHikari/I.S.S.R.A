@@ -36,8 +36,8 @@ class SnapScore(MDApp):
         self.actnumber = None
 
         #Live camera capture
-        self.capture = cam.VideoCapture(0)
-        Clock.schedule_interval(self.load_video, 1.0/30.0)
+        # self.capture = cam.VideoCapture(1) #0
+        # Clock.schedule_interval(self.load_video, 1.0/30.0)
 
         #Screen capture function binding   
         self.main_screen.ids.cam_button.bind(on_press=self.take_pic)
@@ -82,9 +82,23 @@ class SnapScore(MDApp):
         self.main_screen.ids.actno_button.bind(on_press=self.setano)
         self.main_screen.ids.save_button.bind(on_press=self.savescores)
 
+        #Temporary For Sudo Testing
+        self.workingscore = 1
+        self.tempimagedirectory = f'temp/{self.workingscore}.png'
+        self.scorepreview = Image(
+            source = self.tempimagedirectory,
+            pos_hint = {'center_x': .5, 'center_y': .5},
+            size_hint = (.5,.5)
+        )
+        self.main_screen.add_widget(self.scorepreview)
+
         return smanager
 
     def on_start(self): #Screen transition on start
+        if os.path.exists(f'{os.getcwd()}/temp/'):
+            print('Temp Folder Exists')
+        else:
+            os.makedirs(f'{os.getcwd()}/temp/')
         Clock.schedule_once(self.change_screen, 5)
 
     def change_screen(self, dt): #Screen transition properties
@@ -94,31 +108,41 @@ class SnapScore(MDApp):
 
     def load_video(self, *args): #Live camera properties
         ret, frame = self.capture.read()
-        self.image_frame = cam.flip(frame, 1)
+        self.image_frame = cam.flip(frame,1)
         buffer = cam.flip(frame, -1).tobytes()
         texture = Texture.create(
-            size=(frame.shape[1], frame.shape[0]), colorfmt = 'bgr')
+           size=(frame.shape[1], frame.shape[0]), colorfmt = 'bgr')
         texture.blit_buffer(buffer, colorfmt = 'bgr', bufferfmt = 'ubyte')
         self.main_screen.ids.cam.texture = texture
 
     def take_pic(self, *args): #Capture function 
-        image_name = "App/temp/beingrecorded.jpg"
-        cam.imwrite(image_name, self.image_frame)
+        #image_name = "temp/beingrecorded.jpg"
+        #cam.imwrite(image_name, self.image_frame)
 
-        segmented = preprocess.combinedbox(image_name)
-        indiv_score = ocr.identify_score(segmented)
+        #segmented = preprocess.combinedbox(image_name)
+        #indiv_score = ocr.identify_score(segmented)
+        indiv_score = ocr.identify_score(self.tempimagedirectory)
 
-        scoreindex = int(indiv_score[1]) + int(indiv_score[0]) * 10
+        scoreindex = int(indiv_score[1]) + int(indiv_score[0]) * 10 - 1
         actualscore = int(indiv_score[5]) + int(indiv_score[4]) * 10 + int(indiv_score[3]) * 100
 
         self.score_list[scoreindex] = actualscore
 
         print(scoreindex)
         print(actualscore)
-
-        try:
-            os.remove(image_name)
-        except: pass
+        self.workingscore = self.workingscore + 1
+        self.tempimagedirectory = f'temp/{self.workingscore}.png'
+        print(f'New Working Score:{self.workingscore}')
+        self.main_screen.remove_widget(self.scorepreview)
+        self.scorepreview = Image(
+            source = self.tempimagedirectory,
+            pos_hint = {'center_x': .5, 'center_y': .5},
+            size_hint = (.5,.5)
+        )
+        self.main_screen.add_widget(self.scorepreview)
+        # try:
+        #     os.remove(image_name)
+        # except: pass
 
     def set_pt(self, *args):
         self.acttype = "Performance"
@@ -183,5 +207,5 @@ class SnapScore(MDApp):
         sheets.highestgrade(int(self.maxgrade), int(self.actnumber), self.acttype)
         sheets.checkgrade(int(self.nostuds), int(self.actnumber), self.acttype, self.score_list)
 
-if __name__ == '__main__':
-    SnapScore().run()
+
+SnapScore().run()
