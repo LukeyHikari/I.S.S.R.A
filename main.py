@@ -10,11 +10,11 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.button import MDRectangleFlatButton
 import os
 import cv2 as cam
-import record
+import googleapi
 import digit_rec
 
 Window.size = (360,640)
-sheets = record.recording()
+sheets = googleapi.recording()
 preprocess = digit_rec.recognition()
 ocr = digit_rec.scoresocr()
 

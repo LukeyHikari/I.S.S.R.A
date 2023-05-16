@@ -7,6 +7,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient import discovery
+from googleapiclient.http import MediaIoBaseDownload
+import google.auth
+import io
+import pandas as pd
 
 class recording:
     def __init__(self):
@@ -33,8 +37,8 @@ class recording:
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists('token.json'):
-            self.creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
+        if os.path.exists('sheettoken.json'):
+            self.creds = Credentials.from_authorized_user_file('sheettoken.json', self.SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:
@@ -44,7 +48,7 @@ class recording:
                     'credentials.json', self.SCOPES)
                 self.creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('token.json', 'w') as token:
+            with open('sheettoken.json', 'w') as token:
                 token.write(self.creds.to_json())
 
         try:
@@ -131,7 +135,87 @@ class recording:
             print(f"An Error Occured: {error}")
             return
 
+class download:
+    def __init__(self):
+        self.SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        self.creds = None
+        self.service = None
+
+    def oauth(self):
+        # The file token.json stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        if os.path.exists('drivetoken.json'):
+            self.creds = Credentials.from_authorized_user_file('drivetoken.json', self.SCOPES)
+        # If there are no (valid) credentials available, let the user log in.
+        if not self.creds or not self.creds.valid:
+            if self.creds and self.creds.expired and self.creds.refresh_token:
+                self.creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    'credentials.json', self.SCOPES)
+                self.creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open('drivetoken.json', 'w') as token:
+                token.write(self.creds.to_json())
+
+        try:
+            self.service = build('drive', 'v3', credentials=self.creds)
+            print("Authentication Completed")
+        except HttpError as err:
+            print(err)
+
+    def dlfile(self, real_file_id):
+        self.oauth()
+        try:
+            file_id = real_file_id
+            # pylint: disable=maybe-no-member
+            request = self.service.files().get_media(fileId=file_id)
+            file = io.BytesIO()
+            downloader = MediaIoBaseDownload(file, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                print(F'Download {int(status.progress() * 100)}')
+
+        except HttpError as error:
+            print(F'An error occurred: {error}')
+            file = None
+
+        file.seek(0)
+
+        with open(os.path.join(f'{os.getcwd()}/temp/1.png'), 'wb') as f:
+            f.write(file.read())
+            f.close()
+
+        #return file.getvalue()
+    
+    def getFolderFiles(self, _folderid):
+        self.oauth()
+        folder = _folderid
+        query = f"parents = '{folder}'"
+
+        response = self.service.files().list(q=query).execute()
+        files = response.get('files')
+        nextPageToken = response.get('nextPageToken')
+
+        while nextPageToken:
+            response = self.service.files().list(q=query, pageToken = nextPageToken).execute()
+            files.extend(response.get('files'))
+            nextPageToken = response.get('nextPageToken')
+
+        df = pd.DataFrame(files)
+        id_dict = df["id"].to_dict()
+        
+        return id_dict
+
+
 if __name__ == '__main__':
     run = recording()
-    run.highestgrade(10, 1, 'Performance')
-    run.checkgrade(5, 1, 'Performance', ['10','5','6','2','1'])
+    dl = download()
+    #dl.dlfile('1o9Rg_sV-BUcuy5oBsJCgco6td_kKAGkP')
+    #dl.getFolderFiles('1sfTXDhMzbx-UUKvvzqDScYWHf5VEJowd')
+    run.oauth()
+    # dl.dlfile('1sfTXDhMzbx-UUKvvzqDScYWHf5VEJowd')
+    # run.highestgrade(10, 1, 'Performance')
+    # run.checkgrade(5, 1, 'Performance', ['10','5','6','2','1'])

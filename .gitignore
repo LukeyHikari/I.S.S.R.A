@@ -4,5 +4,7 @@ token.json
 bin/
 __pycache__/
 .buildozer/
+drivetoken.json
+sheettoken.json
 
 
